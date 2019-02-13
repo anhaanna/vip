@@ -1,0 +1,244 @@
+.mobile {
+    display: none;
+}
+@media screen and (max-width: 1200px){
+    .bookingMenu ul {
+        display: block;
+        text-align: center;
+    }
+    .bookingMenu ul li {
+        margin: 5px;
+    }
+    .bookingMenu ul li:before {
+        display: none;
+    }
+}
+@media screen and (max-width: 768px) {
+
+    .mobile {
+        display: block;
+    }
+    .mobileHide {
+        display: none !important;
+    }
+    .menuButton {
+        text-align: center;
+        display: inline-block;
+        width: calc(100% - 238px);
+        padding: 0 10px;
+        box-sizing: border-box;
+    }
+    .menuButton span {
+        margin-top: 15px;
+        margin-left: -23px;
+        display: inline-block;
+        width: 50px;
+        max-width: 100%;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    #lang {
+        width: 108px;
+    }
+    #lang ul {
+        max-height: 22px;
+        display: flex;
+        justify-content: space-around;
+    }
+    #lang:hover ul {
+        max-height: 22px;
+    }
+    #logo {
+        margin-top: 5px;
+        max-width: 130px;
+    }
+    .filterHome > div.dataPickerStyle {
+        width: 100% !important;
+    }
+    .menu {
+        ~ -webkit-transition: 0.3s;
+        -moz-transition: 0.3s;
+        -ms-transition: 0.3s;
+        -o-transition: 0.3s;
+        transition: 0.3s;
+        max-height: 0px;
+        padding: 0 15px;
+        overflow: hidden;
+        margin-left: -15px;
+        width: 100%;
+        background: #000000bd;
+        margin-top: 9px;
+        z-index: 999;
+        position: relative;
+    }
+    .menu.show {
+        max-height: 1000px;
+    }
+    .menu ul li {
+        display: block;
+        padding: 5px;
+    }
+    .menu ul li a {
+        display: block;
+    }
+    .menu ul li:hover a {
+        color: #539a5b;
+    }
+    article {
+        display: block;
+        width: 100%;
+    }
+    .articleItem h2 {
+        text-align: center;
+    }
+    .articleImage img {
+        margin: 0 auto;
+        width: 100%;
+    }
+    .articleImage {
+        margin-bottom: 15px;
+        width: 100%;
+        max-width: 100% !important;
+        height: auto;
+    }
+    .fleetRound {
+        justify-content: center;
+    }
+    .readMoreBtn {
+        text-align: center;
+    }
+
+    .footer > .container {
+        display: block;
+    }
+    .footer > .container > div {
+        width: 100%;
+        display: block;
+        text-align: center;
+        border-bottom: 1px solid #ffffff;
+    }
+    .container {
+        padding: 0 15px;
+    }
+    .newsSignIn form {
+        display: block;
+    }
+    .newsSignIn form div {
+        width: 100% !important;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .textBox {
+        column-count: 1;
+        padding: 0;
+    }
+    .textBox form .btn {
+        width: 100%;
+    }
+    .textBox form {
+        display: block;
+        width: 100%;
+    }
+    .textBox ul {
+        padding-left: 0;
+        list-style-position: inside;
+    }
+    .filterHome {
+        padding: 0 30px;
+    }
+    .filterHome > div {
+        float: none;
+        width: 100% !important;
+        margin-bottom: 25px;
+    }
+    .marginBottom50Mobile {
+        margin-bottom: 50px;
+    }
+    .car .carImage {
+        float: none;
+        width: 100%;
+    }
+    /* .car .carImage img {
+        width: 100%;
+    } */
+    .car .carInfo {
+        float: none;
+        width: 100%;
+    }
+    .car .carPrices {
+        float: none;
+        width: 100%;
+        text-align: center;
+    }
+    .car .carPrices .textRight, .carDetails .textRight {
+        text-align: center;
+    }
+    .carDetails {
+        display: block;
+    }
+    .carDetails > div {
+        width: 100% !important;
+    }
+    .mobileCenterText {
+        text-align: center;
+    }
+    .blog_text_style{
+        display: inline-block;
+    }
+    .blog_text_style img{
+        margin-right: 10px;
+    }
+    .cont-flex{flex-wrap: wrap;}
+    #cont_icon{flex-wrap:wrap;}
+    #cont_icon section{width:50%;}
+    .text_style{column-count: 1}
+    ul.nav.menu.compliance.column, .column, section#contact{width:100%;display:block;}
+    .column{margin-bottom:50px;}
+    .custom-blog-class p.readMoreBtn {position: relative;}
+    .returnDate{
+        width: auto;
+    }
+    .tooltip:hover .tooltiptext{
+        position: relative;
+        display: inherit;
+        margin: 0 auto;
+        top: 0;
+        right: 0;
+    }
+    .tooltip .tooltiptext::after{
+        display: none;
+    }
+    .carDetails > .extraField {
+        width: 70% !important;
+        padding: 30px 0;
+        float: left;
+    }
+    .carDetails> .extraPricefield{
+        width: 30% !important;
+        padding: 30px 0;
+        float: right;
+    }
+    span.extraGin{
+        font-size: 16px !important;
+    }
+    .car .carImage img{
+        max-width: 280px;
+    }
+    .other > .book_now {
+        margin-left: 20%;
+        transform: translateX(-10%);
+    }
+    .other > .book_now a{
+        padding: 13px;
+        font-size: 16px;
+    }
+    .react-datepicker.react-datepicker--time-only{
+        width: auto !important;
+    }
+    .react-datepicker{
+        width: 240px !important;
+    }
+    button.btn.red{
+        min-width:110px !important;
+    }
+}

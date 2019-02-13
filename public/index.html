@@ -1,0 +1,405 @@
+<?php
+ini_set('display_errors', 0);
+class Seo {
+    private $reuqesUrl = 'https://api.alptransfer.com/api/';
+    private $domain = 'https://alptransfer.com/';
+    private $currentUrl = '';
+    private $ch = null;
+    public  $main_data = null;
+    public  $main_html = '';
+    private $output = null;
+    public  $lang = 'en';
+    public  $alternate_links = '<link rel="alternate" hreflang="x-default" href="https://alptransfer.com" />';
+    public  $content = '';
+    private $menu = false;
+    private $article = false;
+    public $title = 'Private transfer services in Switzerland & France | AlpTransfer';
+    public $description = 'AlpTransfer provides private airport and city transfers from the airports of Zurich, Geneva, Bern, Basel in Switzerland, as well as from Lyon, Strasbourg and the Rhone-Alps region in France. Book your private transfer to your desired destination with AlpTransfer and travel with comfort and safety.';
+    public $keywords = 'alptransfer, transfer to alps, transfer to alps with cars, tours in alps, tours in switzerland, best places to visit in alps, transfer in switzerland with cars, cars excursion, door to door transfer in switzerland, airport transfer in switzerland, car diposal in switzerland, business cars transfer in switzerland, excursion in switzerland with cars, private airport transfers, airport transfers, private transfer, book transfer online, handicaped cars, cars for disabled, transporter, tours, travel, transfer, shuttle transfer, holiday transfer, business travel, buses';
+    public $other = '';
+
+    function __construct() {
+        $this->main();
+        $this->init();
+        $this->setData();
+    }
+
+private function checkOld($from = null, $to = null, $lang = 'en')
+{
+  if (!$from || !$to) {
+    return false;
+  }
+
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_URL, 'https://api.alptransfer.com/api/transferbooking/'.$from.'/'.$to);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+    'Content-Type: application/json',
+    'Accept: application/json'
+  ));
+  $data = json_decode(curl_exec($ch), true);
+
+  $from_alias = isset($data['from_alias']) ? $data['from_alias'] : null;
+  $to_alias   = isset($data['to_alias']) ? $data['to_alias'] : null;
+
+  if (!$from_alias || !$to_alias) {
+    return false;
+  }
+
+  header("Location: {$this->domain}{$lang}/booking/availableCars/{$from_alias}/{$to_alias}",TRUE,301);
+  exit;
+}
+
+private function main() {
+  $this->ch = curl_init();
+  curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($this->ch, CURLOPT_URL, $this->reuqesUrl.'main');
+  curl_setopt($this->ch, CURLOPT_HTTPHEADER, array(
+  'Content-Type: application/json',
+  'Accept: application/json'
+  ));
+  $this->main_data = curl_exec($this->ch);
+}
+private function init() {
+$this->currentUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$params = explode($this->domain, $this->currentUrl);
+if(isset($params[1]) && !empty($params[1]) ) {
+$urls = explode('/',$params[1]);
+if(!empty($urls[0])){
+$this->lang = $urls[0];
+}
+if(!empty($urls[1])){
+$this->menu = $urls[1];
+}
+if(!empty($urls[2])){
+$this->article = $urls[2];
+}
+if (isset($urls[3])){
+$this->from = $urls[3];
+}
+if (  isset($urls[4]) ){
+$this->to = $urls[4];
+}
+
+}
+if($this->article){
+  if ($this->menu === 'destinations') {
+    $this->reuqesUrl = $this->reuqesUrl . 'points/' . $this->article;
+  } else {
+    $this->reuqesUrl = $this->reuqesUrl . 'article/' . $this->article;
+  }
+}elseif ($this->menu){
+  if ($this->menu === 'destinations') {
+    $this->reuqesUrl = $this->reuqesUrl . 'points';
+  } else {
+    $this->reuqesUrl = $this->reuqesUrl . 'menu/' . $this->menu;
+  }
+}
+$this->ch = curl_init();
+curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($this->ch, CURLOPT_URL, $this->reuqesUrl);
+curl_setopt($this->ch, CURLOPT_HTTPHEADER, array(
+'Content-Type: application/json',
+'Accept: application/json'
+));
+$this->output = curl_exec($this->ch);
+}
+
+private function setData(){
+  $main_data = json_decode($this->main_data, true);
+  $data = json_decode($this->output, true);
+  foreach ($main_data['languages'] as $value) {
+    if ($this->menu) {
+      $url = str_replace('/'.$this->lang.'/', '/'.$value['code'].'/', $this->currentUrl );
+    } else {
+      $url = $this->currentUrl.$value['code'];
+    }
+    $this->main_html .= '<ul>';
+    $this->main_html .= '<li><a href="'.$url.'">'.$value['code'].'</a></li>';
+    $this->main_html .= '</ul>';
+  }
+  foreach ($main_data['menus'] as $value) {
+    if ($value['header'] || $value['footer']) {
+      $this->main_html .= '<ul>';
+      $this->main_html .= '<li><a href="/'.$this->lang.'/'.$value['alias'].'">'.$value['lang'][$this->lang]['title'].'</a></li>';
+    }
+  }
+  $this->main_html .= '<li><a href="/'.$this->lang.'/destinations">destinations</a></li>';
+  $this->main_html .= '</ul>';
+if($this->article){
+  if ($this->lang == 'transferbooking') {
+    $this->checkOld($this->menu, $this->article);
+  } elseif ($this->menu == 'transferbooking') {
+    $this->checkOld($this->article, $this->from, $this->lang);
+  }
+
+  if ($this->menu == 'destinations') {
+    $data['page_title'] = 'Transfer Booking: Available Destinations From '.ucwords(str_replace('-', ' ', $this->article));
+    $html = '<ul>';
+    foreach ($data as $point) {
+      $html .= '<li><a href="/'.$this->lang.'/booking/availableCars/'.$this->article. '/' .$point['alias'].'">'.$point['title'].'</a></li>';
+    }
+    $html .= '</ul>';
+    $data['content'] = $html;
+  } elseif ($this->menu == 'booking' && $this->article == 'availableCars') {
+    $meta_descs = [
+      'en' => 'AlpTransfer arranges private transfers in Switzerland starting from %s to %s & vice versa. Book your private deluxe transfers & trips in Switzerland.',
+      'fr' => 'AlpTransfer organise des transferts privés en Suisse depuis %s à %s et vice versa. Réservez vos transferts privés de luxe et vos voyages en Suisse.',
+      'de' => 'AlpTransfer organisiert Privattransfers in der %s von %s bis und umgekehrt. Buchen Sie Ihre privaten Deluxe-Transfers und Ausflüge in der Schweiz.',
+      'ru' => 'AlpTransfer организует частные трансфери в Швейцарии, начиная с %s  до %s и наоборот. Забронируйте частныe роскошные трансфери и экскурсии в Швейцарии.',
+    ];
+    $from = isset($this->from) && $this->from ? ucwords(str_replace('-', ' ', $this->from)) : '';
+    $to   = isset($this->to) && $this->to ? ucwords(str_replace('-', ' ', $this->to)) : '';
+    
+    if(isset($this->from) && $this->from) {
+      $data['page_title'] = 'FROM ' .strtoupper(str_replace('-', ' ', $this->from));
+    }
+    if(isset($this->to) && $this->to) {
+      $data['page_title'] .= ' TO '.strtoupper(str_replace('-', ' ', $this->to));
+    }
+    if ($data['page_title']) {
+       $data['page_title'] .= ' TRANSFER - FRANCE AND SWITZERLAND | ALP TRANSFER';
+    }
+
+    $data['meta_description'] = sprintf($meta_descs[$this->lang], $from, $to);
+  } else {
+    $data = $data['lang'][$this->lang];
+  }
+}elseif($this->menu) {
+  if ($this->menu === 'destinations') {
+    $html = '<ul>';
+    foreach ($data as $point) {
+      $html .= '<li><a href="/'.$this->lang.'/destinations/'.$point['alias'].'">'.$point['title'].'</a></li>';
+    }
+    $html .= '</ul>';
+    $data['content'] = $html;
+  } else {
+    $html = '';
+    if (!empty($data['child']['Category'])) {
+      foreach ($data['child']['Category']['child'] as $key => $value) {
+          $html .= '<div>';
+          $html .= '<h2><a href="/'. $this->lang . '/' . $this->menu . '/' . $value['alias'].'">'.$value['lang'][$this->lang]['title'].'</a></h2>';
+          $html .= '<p>'.$value['lang'][$this->lang]['description'].'</p>';
+          $html .= '</div>';
+      }
+      
+      $data = $data['child']['Category']['lang'][$this->lang];
+      $data['content'] = $html;
+    } elseif (!empty($data['child']['Article'])) {
+      $data = $data['child']['Article']['lang'][$this->lang];
+    }
+  }
+}
+
+if ($data['page_title']) {
+$this->title = $data['page_title'];
+}
+if ($data['meta_description']) {
+$this->description = $data['meta_description'];
+}
+if ($data['meta_keywords']) {
+$this->keywords = $data['meta_keywords'];
+}
+if ($data['schema_script']) {
+$this->other = $data['schema_script'];
+}
+if ($data['content']) {
+$this->content = $data['content'];
+}
+
+if($this->lang && $this->currentUrl) {
+  $langs = ['en' => 'en-GB', 'fr' => 'fr-FR', 'de'=>'de-DE', 'ru' => 'ru-RU'];
+  if (isset($langs[$this->lang])) {
+    foreach ($langs as $key => $lang) {
+      if ($key != $this->lang) {
+        $this->alternate_links .= '<link rel="alternate" hreflang="'.$lang.'" href="'.str_replace('/'.$this->lang.'/', '/'.$key.'/', $this->currentUrl ).'" />';
+      }
+    }
+  }  
+}
+
+}
+
+function __destruct()
+{
+curl_close($this->ch);
+}
+}
+
+$seo = new Seo();
+?>
+
+<!DOCTYPE html>
+<html lang="<?=$seo->lang?>">
+  <head>
+    <title><?=$seo->title?></title>
+    <meta name="keywords" content="<?=$seo->keywords?>">
+    <meta name="description" content="<?=$seo->description?>">
+    <?=$seo->other?>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="revisit-after" content="1 Days"/>
+    <meta name="Robots" content="all"/>
+    <meta name="language" content="English" />
+    <meta name="google" content="notranslate" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="AlpTransfer" />
+    <meta name="theme-color" content="#000000">
+    <meta name="google-site-verification" content="ejUMWx7yBwGcY-pEZOYZm8Ts9tvv98vGKIForHbPrqI" />
+    <meta property="og:url" content="https://www.alptransfer.com/" />
+    <meta property="og:site_name" content="www.alptransfer.com" /> 
+    <meta property="og:image" content="https://api.alptransfer.com/storage/images/fTu6jZ2yuDM3IoSMRlSRcYVh7B6nNpFPNqMmbR3E.jpeg" />
+    <meta property="og:type" content="website" /> 
+    <meta property="og:author" content="AlpTransfer" />
+    <meta property="article:author" content="https://www.facebook.com/alptransfercom" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@alptransfer" />
+    <meta name="twitter:creator" content="@alptransfer" />  
+    <meta name="twitter:image" content="https://api.alptransfer.com/storage/images/fTu6jZ2yuDM3IoSMRlSRcYVh7B6nNpFPNqMmbR3E.jpeg" />
+    <meta name="msapplication-TileColor" content="#539a5b">
+    <meta name="msapplication-TileImage" content="%PUBLIC_URL%/img/icons/mstile-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <link sizes="57x57" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-57x57.png">
+    <link sizes="60x60" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-60x60.png">
+    <link sizes="72x72" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-72x72.png">
+    <link sizes="76x76" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-76x76.png">
+    <link sizes="114x114" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-114x114.png">
+    <link sizes="120x120" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-120x120.png">
+    <link sizes="144x144" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-144x144.png">
+    <link sizes="152x152" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-152x152.png">
+    <link sizes="180x180" rel="apple-touch-icon" href="%PUBLIC_URL%/img/icons/apple-touch-icon-180x180.png">
+    <link sizes="32x32" rel="icon" type="image/png" href="%PUBLIC_URL%/img/icons/favicon-32x32.png">
+    <link sizes="192x192" rel="icon" type="image/png" href="%PUBLIC_URL%/img/icons/android-chrome-192x192.png">
+    <link sizes="96x96" rel="icon" type="image/png" href="%PUBLIC_URL%/img/icons/favicon-96x96.png">
+    <link sizes="16x16" rel="icon" type="image/png" href="%PUBLIC_URL%/img/icons/favicon-16x16.png">
+    <link color="#539a5b" rel="mask-icon" href="%PUBLIC_URL%/img/icons/safari-pinned-tab.svg">
+    <!--
+      manifest.json provides metadata used when your web app is added to the
+      homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
+    <link rel="stylesheet" href="%PUBLIC_URL%/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
+    <link rel="stylesheet" href="%PUBLIC_URL%/css/style.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/css/mobile.css">
+    <link rel="stylesheet" href="%PUBLIC_URL%/css/icon.css">
+    <?=$seo->alternate_links?>
+
+    <script type="application/ld+json"> 
+      [{"@context":"http://schema.org/", 
+        "@type":"Organization", 
+        "name":"AlpTransfer", 
+        "description":"AlpTransfer provides private airport and city transfers from the airports of Zurich, Geneva, Bern, Basel in Switzerland, as well as from Lyon, Strasbourg and the Rhone-Alps region in France. Book your private transfer to your desired destination with AlpTransfer and travel with comfort and safety.", 
+        "image":"https://api.alptransfer.com/storage/images/fTu6jZ2yuDM3IoSMRlSRcYVh7B6nNpFPNqMmbR3E.jpeg", 
+        "logo":"https://alptransfer.com/static/media/Alp-logo.5d70953e.svg", 
+        "brand": "Aratours", 
+        "address":{
+          "@type":"PostalAddress", 
+          "streetAddress":"Route des Arsenaux 9", 
+          "postalCode":"1701", 
+          "addressRegion":"Fribourg", 
+          "addressCountry":"Switzerland"
+        }, 
+        "email":"info@alptransfer.com", 
+        "telephone":"+41263227777", 
+        "url":"https://alptransfer.com/", 
+        "foundingDate":"08 June 2006", 
+        "founder": {
+          "@type":"Person", 
+          "name":"Ara Khurshudian", 
+          "birthDate":"26 July 1977", 
+          "email":"ara.khurshudian@aratours.travel", 
+          "jobTitle":"Chief Executive Officer", 
+          "nationality":["Armenia","Switzerland"] 
+        }, 
+        "sameAs":[
+          "https://www.facebook.com/alptransfercom/", 
+          "https://twitter.com/Alptransfer", 
+          "https://plus.google.com/100207926423202719228", 
+          "https://www.instagram.com/alptransfercom/", 
+          "https://www.linkedin.com/in/alp-transfer-2ab4b7aa/", 
+          "https://vk.com/alptransfercom"] 
+        }, 
+        {"@context":"http://schema.org/", 
+          "@type": "Service", 
+          "serviceType": "Rent Servies", 
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog", 
+            "name": "Car Rent Services", 
+            "itemListElement": [{
+              "@type": "Offer", 
+              "itemOffered": {
+                "@type": "Service", 
+                "name": "Door to Door Transfers"} 
+              }, 
+              {"@type": "Offer", 
+              "itemOffered": {
+                "@type": "Service", 
+                "name": "Airport Transfers Services"} 
+              },
+                {"@type": "Offer", 
+                "itemOffered": {
+                  "@type": "Service", 
+                  "name": "Car Diposal Services"} 
+                }, 
+                {"@type": "Offer", 
+                "itemOffered": {
+                  "@type": "Service", 
+                  "name": "Business Transfers"} 
+              }, 
+              {"@type": "Offer", 
+              "itemOffered": {
+                "@type": "Service", 
+                "name": "City Tour and Excursion"} 
+              }, 
+              {"@type": "Offer", 
+              "itemOffered": {
+                "@type": "Service", 
+                "name": "Handicapped Services"} 
+              } ] } } ] 
+
+  </script>
+
+
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-69499837-1"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-69499837-1');
+      </script>
+  </head>
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root">
+      <div style="display:none"><?=$seo->main_html?><?=$seo->content?></div>
+    </div>
+    <!-- BEGIN JIVOSITE CODE {literal} -->
+    <script type='text/javascript'>
+    (function(){ var widget_id = 'UB25tMBWmK';var d=document;var w=window;function l(){
+    var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = '//code.jivosite.com/script/widget/'+widget_id; var ss = document.getElementsByTagName('script')[0]; ss.parentNode.insertBefore(s, ss);}if(d.readyState=='complete'){l();}else{if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})();</script>
+    <!-- {/literal} END JIVOSITE CODE -->
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
